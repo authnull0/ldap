@@ -1,4 +1,4 @@
-module github.com/nmcclain/ldap
+module github.com/authnull0/ldap
 
 go 1.14
 
