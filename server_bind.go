@@ -1,12 +1,15 @@
 package ldap
 
 import (
-	"github.com/nmcclain/asn1-ber"
+	"fmt"
 	"log"
 	"net"
+
+	ber "github.com/nmcclain/asn1-ber"
 )
 
 func HandleBindRequest(req *ber.Packet, fns map[string]Binder, conn net.Conn) (resultCode LDAPResultCode) {
+	fmt.Println("HandleBindRequest")
 	defer func() {
 		if r := recover(); r != nil {
 			resultCode = LDAPResultOperationsError
