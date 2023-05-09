@@ -129,6 +129,7 @@ func DecompileFilter(packet *ber.Packet) (ret string, err error) {
 	}
 
 	ret += ")"
+	fmt.Println("Filter Query : ", ret)
 	return
 }
 
