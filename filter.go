@@ -109,13 +109,13 @@ func DecompileFilter(packet *ber.Packet) (ret string, err error) {
 		}
 	case FilterEqualityMatch:
 		ret += ber.DecodeString(packet.Children[0].Data.Bytes())
-		fmt.Println("FilterEqualityMatch :", ret)
+		// fmt.Println("FilterEqualityMatch :", ret)
 		ret += "="
-		if strings.Contains(ret, "member") {
-			ret += EscapeDN(ber.DecodeString(packet.Children[1].Data.Bytes()))
-		} else {
-			ret += ber.DecodeString(packet.Children[1].Data.Bytes())
-		}
+		// if strings.Contains(ret, "member") {
+		// 	ret += EscapeDN(ber.DecodeString(packet.Children[1].Data.Bytes()))
+		// } else {
+		ret += ber.DecodeString(packet.Children[1].Data.Bytes())
+		// }
 	case FilterGreaterOrEqual:
 		ret += ber.DecodeString(packet.Children[0].Data.Bytes())
 		ret += ">="
