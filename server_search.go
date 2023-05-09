@@ -25,7 +25,6 @@ func HandleSearchRequest(req *ber.Packet, controls *[]Control, messageID uint64,
 	if err != nil {
 		return NewError(LDAPResultOperationsError, err)
 	}
-
 	fmt.Println("Compiling Filter Ends...")
 	fnNames := []string{}
 	for k := range server.SearchFns {
