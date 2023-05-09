@@ -206,6 +206,7 @@ func encodeSearchResponse(messageID uint64, req SearchRequest, res *Entry) *ber.
 	for _, attribute := range res.Attributes {
 		fmt.Println(attribute.Name)
 		fmt.Println(attribute.Values)
+
 		attrs.AppendChild(encodeSearchAttribute(attribute.Name, attribute.Values))
 	}
 
