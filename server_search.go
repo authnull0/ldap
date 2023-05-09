@@ -6,6 +6,9 @@ import (
 	"net"
 	"strings"
 
+	"github.com/go-ldap/ldap"
+
+	"github.com/go-ldap/ldap/v3"
 	ber "github.com/nmcclain/asn1-ber"
 )
 
@@ -21,7 +24,7 @@ func HandleSearchRequest(req *ber.Packet, controls *[]Control, messageID uint64,
 		return NewError(LDAPResultOperationsError, err)
 	}
 	fmt.Println("Compiling Filter Starts...")
-	filterPacket, err := CompileFilter(searchReq.Filter)
+	filterPacket, err := CompileFilter(ldap.EscapeFilter(searchReq.Filter))
 	if err != nil {
 		return NewError(LDAPResultOperationsError, err)
 	}
