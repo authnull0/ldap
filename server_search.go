@@ -20,12 +20,12 @@ func HandleSearchRequest(req *ber.Packet, controls *[]Control, messageID uint64,
 	if err != nil {
 		return NewError(LDAPResultOperationsError, err)
 	}
-	fmt.Println("Compiling Filter Starts here...", EscapeFilter(searchReq.Filter))
+	fmt.Println("git stCompiling Filter Starts here...", EscapeFilter(searchReq.Filter))
 	filterPacket, err := CompileFilter(searchReq.Filter)
 	if err != nil {
 		return NewError(LDAPResultOperationsError, err)
 	}
-	fmt.Println("Compiling Filter Ends...")
+	fmt.Println("Search Compiling Filter Ends...")
 	fnNames := []string{}
 	for k := range server.SearchFns {
 		fnNames = append(fnNames, k)
@@ -205,7 +205,6 @@ func encodeSearchResponse(messageID uint64, req SearchRequest, res *Entry) *ber.
 	for _, attribute := range res.Attributes {
 		fmt.Println(attribute.Name)
 		fmt.Println(attribute.Values)
-
 		attrs.AppendChild(encodeSearchAttribute(attribute.Name, attribute.Values))
 	}
 
