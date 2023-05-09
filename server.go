@@ -2,13 +2,15 @@ package ldap
 
 import (
 	"crypto/tls"
+	"crypto/x509"
 	"io"
+	"io/ioutil"
 	"log"
 	"net"
 	"strings"
 	"sync"
 
-	"github.com/nmcclain/asn1-ber"
+	ber "github.com/nmcclain/asn1-ber"
 )
 
 type Binder interface {
@@ -45,7 +47,6 @@ type Closer interface {
 	Close(boundDN string, conn net.Conn) error
 }
 
-//
 type Server struct {
 	BindFns     map[string]Binder
 	SearchFns   map[string]Searcher
@@ -78,7 +79,6 @@ type ServerSearchResult struct {
 	ResultCode LDAPResultCode
 }
 
-//
 func NewServer() *Server {
 	s := new(Server)
 	s.Quit = make(chan bool)
@@ -164,6 +164,39 @@ func (server *Server) ListenAndServeTLS(listenString string, certFile string, ke
 	return nil
 }
 
+func (server *Server) ListenAndServeTLSPEM(listenString string, pemFile string) error {
+
+	// Load PEM file
+	pemData, err := ioutil.ReadFile(pemFile)
+	if err != nil {
+		log.Fatalf("Failed to read PEM file: %v", err)
+	}
+
+	// Parse PEM data
+	certPool := x509.NewCertPool()
+	ok := certPool.AppendCertsFromPEM(pemData)
+	if !ok {
+		log.Fatalf("Failed to parse PEM data")
+	}
+
+	// Set up TLS configuration
+	tlsConfig := &tls.Config{
+		RootCAs:            certPool,
+		InsecureSkipVerify: true, // Skip server certificate verification
+	}
+
+	// tlsConfig.ServerName = "localhost"
+	ln, err := tls.Listen("tcp", listenString, tlsConfig)
+	if err != nil {
+		return err
+	}
+	err = server.Serve(ln)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (server *Server) SetStats(enable bool) {
 	if enable {
 		server.Stats = &Stats{}
@@ -221,7 +254,6 @@ listener:
 	return nil
 }
 
-//
 func (server *Server) handleConnection(conn net.Conn) {
 	boundDN := "" // "" == anonymous
 
@@ -363,7 +395,6 @@ handler:
 	conn.Close()
 }
 
-//
 func sendPacket(conn net.Conn, packet *ber.Packet) error {
 	_, err := conn.Write(packet.Bytes())
 	if err != nil {
@@ -373,14 +404,13 @@ func sendPacket(conn net.Conn, packet *ber.Packet) error {
 	return nil
 }
 
-//
 func routeFunc(dn string, funcNames []string) string {
 	bestPick := ""
 	bestPickWeight := 0
 	dnMatch := "," + strings.ToLower(dn)
 	var weight int
 	for _, fn := range funcNames {
-		if strings.HasSuffix(dnMatch, "," + fn) {
+		if strings.HasSuffix(dnMatch, ","+fn) {
 			//  empty string as 0, no-comma string 1 , etc
 			if fn == "" {
 				weight = 0
@@ -396,7 +426,6 @@ func routeFunc(dn string, funcNames []string) string {
 	return bestPick
 }
 
-//
 func encodeLDAPResponse(messageID uint64, responseType uint8, ldapResultCode LDAPResultCode, message string) *ber.Packet {
 	responsePacket := ber.Encode(ber.ClassUniversal, ber.TypeConstructed, ber.TagSequence, nil, "LDAP Response")
 	responsePacket.AppendChild(ber.NewInteger(ber.ClassUniversal, ber.TypePrimitive, ber.TagInteger, messageID, "Message ID"))
@@ -408,7 +437,6 @@ func encodeLDAPResponse(messageID uint64, responseType uint8, ldapResultCode LDA
 	return responsePacket
 }
 
-//
 type defaultHandler struct {
 }
 
@@ -447,7 +475,6 @@ func (h defaultHandler) Close(boundDN string, conn net.Conn) error {
 	return nil
 }
 
-//
 func (stats *Stats) countConns(delta int) {
 	if stats != nil {
 		stats.statsMutex.Lock()
