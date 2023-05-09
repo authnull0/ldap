@@ -20,8 +20,8 @@ func HandleSearchRequest(req *ber.Packet, controls *[]Control, messageID uint64,
 	if err != nil {
 		return NewError(LDAPResultOperationsError, err)
 	}
-	fmt.Println("Compiling Filter Starts...")
-	filterPacket, err := CompileFilter(EscapeFilter(searchReq.Filter))
+	fmt.Println("Compiling Filter Starts...", EscapeFilter(searchReq.Filter))
+	filterPacket, err := CompileFilter(searchReq.Filter)
 	if err != nil {
 		return NewError(LDAPResultOperationsError, err)
 	}
