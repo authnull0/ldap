@@ -204,6 +204,8 @@ func encodeSearchResponse(messageID uint64, req SearchRequest, res *Entry) *ber.
 
 	attrs := ber.Encode(ber.ClassUniversal, ber.TypeConstructed, ber.TagSequence, nil, "Attributes:")
 	for _, attribute := range res.Attributes {
+		fmt.Println(attribute.Name)
+		fmt.Println(attribute.Values)
 		attrs.AppendChild(encodeSearchAttribute(attribute.Name, attribute.Values))
 	}
 
@@ -272,4 +274,44 @@ func EscapeFilter(filter string) string {
 		}
 	}
 	return string(buf)
+}
+
+// EscapeDN escapes distinguished names as described in RFC4514. Characters in the
+// set `"+,;<>\` are escaped by prepending a backslash, which is also done for trailing
+// spaces or a leading `#`. Null bytes are replaced with `\00`.
+func EscapeDN(dn string) string {
+	if dn == "" {
+		return ""
+	}
+
+	builder := strings.Builder{}
+
+	for i, r := range dn {
+		// Escape leading and trailing spaces
+		if (i == 0 || i == len(dn)-1) && r == ' ' {
+			builder.WriteRune('\\')
+			builder.WriteRune(r)
+			continue
+		}
+
+		// Escape leading '#'
+		if i == 0 && r == '#' {
+			builder.WriteRune('\\')
+			builder.WriteRune(r)
+			continue
+		}
+
+		// Escape characters as defined in RFC4514
+		switch r {
+		case '"', '+', ',', ';', '<', '>', '\\':
+			builder.WriteRune('\\')
+			builder.WriteRune(r)
+		case '\x00': // Null byte may not be escaped by a leading backslash
+			builder.WriteString("\\00")
+		default:
+			builder.WriteRune(r)
+		}
+	}
+
+	return builder.String()
 }
