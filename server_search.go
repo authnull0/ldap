@@ -6,9 +6,6 @@ import (
 	"net"
 	"strings"
 
-	"github.com/go-ldap/ldap"
-
-	"github.com/go-ldap/ldap/v3"
 	ber "github.com/nmcclain/asn1-ber"
 )
 
@@ -24,7 +21,7 @@ func HandleSearchRequest(req *ber.Packet, controls *[]Control, messageID uint64,
 		return NewError(LDAPResultOperationsError, err)
 	}
 	fmt.Println("Compiling Filter Starts...")
-	filterPacket, err := CompileFilter(ldap.EscapeFilter(searchReq.Filter))
+	filterPacket, err := CompileFilter(EscapeFilter(searchReq.Filter))
 	if err != nil {
 		return NewError(LDAPResultOperationsError, err)
 	}
@@ -240,4 +237,39 @@ func encodeSearchDone(messageID uint64, ldapResultCode LDAPResultCode) *ber.Pack
 	responsePacket.AppendChild(donePacket)
 
 	return responsePacket
+}
+
+var hex = "0123456789abcdef"
+
+func mustEscape(c byte) bool {
+	return c > 0x7f || c == '(' || c == ')' || c == '\\' || c == '*' || c == 0
+}
+
+// EscapeFilter escapes from the provided LDAP filter string the special
+// characters in the set `()*\` and those out of the range 0 < c < 0x80,
+// as defined in RFC4515.
+func EscapeFilter(filter string) string {
+	escape := 0
+	for i := 0; i < len(filter); i++ {
+		if mustEscape(filter[i]) {
+			escape++
+		}
+	}
+	if escape == 0 {
+		return filter
+	}
+	buf := make([]byte, len(filter)+escape*2)
+	for i, j := 0, 0; i < len(filter); i++ {
+		c := filter[i]
+		if mustEscape(c) {
+			buf[j+0] = '\\'
+			buf[j+1] = hex[c>>4]
+			buf[j+2] = hex[c&0xf]
+			j += 3
+		} else {
+			buf[j] = c
+			j++
+		}
+	}
+	return string(buf)
 }
