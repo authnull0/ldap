@@ -21,7 +21,14 @@ func HandleSearchRequest(req *ber.Packet, controls *[]Control, messageID uint64,
 		return NewError(LDAPResultOperationsError, err)
 	}
 	fmt.Println("git stCompiling Filter Starts here...", EscapeFilter(searchReq.Filter))
-	filterPacket, err := CompileFilter(EscapeFilter(searchReq.Filter))
+	var filterPacket *ber.Packet
+	if strings.Contains(searchReq.Filter, "memberOf") {
+		filterPacket, err = CompileFilter(EscapeFilter(searchReq.Filter))
+
+	} else {
+		filterPacket, err = CompileFilter(searchReq.Filter)
+
+	}
 	if err != nil {
 		return NewError(LDAPResultOperationsError, err)
 	}
