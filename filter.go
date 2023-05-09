@@ -109,6 +109,7 @@ func DecompileFilter(packet *ber.Packet) (ret string, err error) {
 		}
 	case FilterEqualityMatch:
 		ret += ber.DecodeString(packet.Children[0].Data.Bytes())
+		fmt.Println("FilterEqualityMatch :", ret)
 		ret += "="
 		ret += ber.DecodeString(packet.Children[1].Data.Bytes())
 	case FilterGreaterOrEqual:
